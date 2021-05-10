@@ -1,0 +1,23 @@
+hii __label__eng 1.000003457069397
+helllo there sirr __label__eng 1.0000100135803223
+thanks __label__eng 1.0000100135803223
+mer6 __label__fra 0.6089487075805664
+merci __label__fra 0.9901350736618042
+à bientot __label__fra 1.0000100135803223
+ahla je suis ici __label__fra 1.0000097751617432
+ahla compte  __label__fra 0.9798012375831604
+mer6 __label__fra 0.6089487075805664
+bn8 __label__eng 1.0
+bonne nuit __label__fra 1.0000097751617432
+goood __label__eng 1.0000100135803223
+greaat __label__eng 1.0000097751617432
+slt __label__eng 1.0000100135803223
+salut __label__fra 0.9821059703826904
+ici __label__fra 1.0000098943710327
+là __label__fra 1.0000100135803223
+thnx __label__eng 1.0000100135803223
+ty __label__eng 1.0000100135803223
+enty smar __label__eng 0.9993405342102051
+enty smart  __label__eng 0.9998781681060791
+esma3  __label__fra 0.9955288171768188
+esma3 houni ! __label__eng 0.9988947510719299
