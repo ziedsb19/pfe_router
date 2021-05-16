@@ -20,7 +20,7 @@ detector = Factory.getLangDetector()
 mongo_client = Factory.getMongoClient()
 
 
-def init_context(conversation_id, mode, langue, default_langue):
+def init_context(conversation_id, mode, langue, default_langue, persistance):
 
     _lang_locked = True
     if default_langue == "free":
@@ -33,20 +33,26 @@ def init_context(conversation_id, mode, langue, default_langue):
         "_lang_locked_value": default_langue,
     }
 
-    _base = servers[session[conversation_id]["_lang_locked_value"]]
+    _base = servers[session[conversation_id]["lang"]]
     _url = path.join(
         _base,
         "conversations/" + conversation_id + "/tracker/events?include_events=NONE",
     )
 
-    _data = [
-        {"event": "slot", "name": "mode", "value": mode},
-        {"event": "slot", "name": "langue", "value": default_langue},
-    ]
+    if _lang_locked:
+        _data = [
+            {"event": "slot", "name": "mode", "value": mode},
+            {"event": "slot", "name": "langue", "value": default_langue},
+        ]
+    else:
+        _data = [
+            {"event": "slot", "name": "mode", "value": mode},
+            {"event": "slot", "name": "langue", "value": langue},
+        ]
 
     _resp = requests.post(_url, json=_data)
     if _resp.status_code == 200:
-        if mongo_client is not None:
+        if mongo_client is not None and persistance != False:
 
             mongo_client.update_credentials_set_mode_langue(
                 conversation_id, mode, default_langue
@@ -119,7 +125,7 @@ def update_context(conversation_id, mode, langue, default_langue):
     session[conversation_id]["history"] = langue
 
 
-def send_message(conversation_id, message, mongo_client):
+def send_message(conversation_id, message, mongo_client, persistance, prob):
     _base = servers[session[conversation_id]["lang"]]
     _url = path.join(_base, "webhooks/rest/webhook")
     _data = {"sender": conversation_id, "message": message}
@@ -127,8 +133,11 @@ def send_message(conversation_id, message, mongo_client):
     _resp = requests.post(_url, json=_data)
 
     if _resp.status_code == 200:
-        for conv in _resp.json():
-            update_mongo_db(mongo_client, conversation_id, conv["custom"], False)
+        if persistance != False:
+            for conv in _resp.json():
+                conv["langue"] = session[conversation_id]["lang"]
+                conv["prob_lang"] = prob
+                update_mongo_db(mongo_client, conversation_id, conv["custom"], False)
 
         return _resp.json()
 
@@ -137,7 +146,7 @@ def send_message(conversation_id, message, mongo_client):
 
 def predict_language(detector, _message):
 
-    pred = detector.predict(_message)
+    pred, prob = detector.predict(_message)
     print("pred222", pred)
     if pred == "__label__eng":
         _lang = "en"
@@ -147,7 +156,7 @@ def predict_language(detector, _message):
     else:
         _lang = "tn"
 
-    return _lang
+    return _lang, prob
 
 
 def update_mongo_db(mongo_client: Mongo, sender_id: str, message, is_user):
@@ -161,25 +170,30 @@ def update_mongo_db(mongo_client: Mongo, sender_id: str, message, is_user):
 @app.route("/", methods=["POST"])
 @cross_origin()
 def redirect():
-
     _conversation_id = str(request.json["sender"])
     _message = request.json["message"]
     _mode = request.json["mode"]
     _default_lang = request.json["langue"]
 
     _lang = _default_lang
-    if _mode == "free":
-        _lang = predict_language(detector, _message)
 
-    init_context(_conversation_id, _mode, _lang, _default_lang)
+    try:
+        _persistance = request.json["persistance"]
+    except:
+        _persistance = True
+
+    _lang, _prob = predict_language(detector, _message)
+
+    init_context(_conversation_id, _mode, _lang, _default_lang, _persistance)
     # update_context(_conversation_id, _mode, _lang, _default_lang)
+    if _persistance != False:
+        update_mongo_db(mongo_client, _conversation_id, _message, is_user=True)
+        print("testtt", _persistance)
 
-    update_mongo_db(mongo_client, _conversation_id, _message, is_user=True)
-
-    _resp = send_message(_conversation_id, _message, mongo_client)
+    _resp = send_message(_conversation_id, _message, mongo_client, _persistance, _prob)
+    print(session, _resp)
     _resp = jsonify(_resp)
 
-    print(session)
     return _resp
 
 
@@ -228,7 +242,7 @@ def langue():
 
     _message = request.json["message"]
 
-    _pred = predict_language(detector, _message)
+    _pred, _prob = predict_language(detector, _message)
 
     return _pred
 

@@ -51,11 +51,11 @@ class LangDetector:
             _first_try_class, _first_try_prob = self.predict_tf(_txt)
 
             if _first_try_prob > LangDetector._threshold:
-                return _first_try_class
+                return _first_try_class, _first_try_prob
             else:
                 _first_try = self.predict_fast_text(_txt)
                 _first_try_class, _first_try_prob = _first_try[0][0], _first_try[1][0]
-                return _first_try_class
+                return _first_try_class, _first_try_prob
 
-        return self.predict_tf(_txt)[0]
+        return self.predict_tf(_txt)[0], self.predict_tf(_txt)[1]
 
