@@ -40,7 +40,7 @@ class LangDetector:
         res = self._model_tf(_txt)[0]
         pred = tf.argmax(res).numpy()
 
-        return LangDetector._id2label[pred], res[pred]
+        return LangDetector._id2label[pred], float(res[pred])
 
     def predict(self, msg):
         _txt = self.transform_text(msg)

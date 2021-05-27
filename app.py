@@ -125,18 +125,15 @@ def update_context(conversation_id, mode, langue, default_langue):
     session[conversation_id]["history"] = langue
 
 
-def send_message(conversation_id, message, mongo_client, persistance, prob):
+def send_message(conversation_id, message, mongo_client, persistance):
     _base = servers[session[conversation_id]["lang"]]
     _url = path.join(_base, "webhooks/rest/webhook")
     _data = {"sender": conversation_id, "message": message}
 
     _resp = requests.post(_url, json=_data)
-
     if _resp.status_code == 200:
         if persistance != False:
             for conv in _resp.json():
-                conv["langue"] = session[conversation_id]["lang"]
-                conv["prob_lang"] = prob
                 update_mongo_db(mongo_client, conversation_id, conv["custom"], False)
 
         return _resp.json()
@@ -147,7 +144,6 @@ def send_message(conversation_id, message, mongo_client, persistance, prob):
 def predict_language(detector, _message):
 
     pred, prob = detector.predict(_message)
-    print("pred222", pred)
     if pred == "__label__eng":
         _lang = "en"
     elif pred == "__label__fra":
@@ -190,8 +186,11 @@ def redirect():
         update_mongo_db(mongo_client, _conversation_id, _message, is_user=True)
         print("testtt", _persistance)
 
-    _resp = send_message(_conversation_id, _message, mongo_client, _persistance, _prob)
-    print(session, _resp)
+    _resp = send_message(_conversation_id, _message, mongo_client, _persistance)
+    if len(_resp) > 0:
+        _resp[0]["langue"] = _lang
+        _resp[0]["prob_lang"] = float(_prob)
+
     _resp = jsonify(_resp)
 
     return _resp
