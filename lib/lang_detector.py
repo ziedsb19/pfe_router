@@ -43,19 +43,26 @@ class LangDetector:
         return LangDetector._id2label[pred], float(res[pred])
 
     def predict(self, msg):
+
+        override_texts = {
+            "le": "__label__tun",
+            "lee": "__label__tun",
+            "non": "__label__fra",
+        }
+
         _txt = self.transform_text(msg)
         _len_txt = len(_txt.split())
 
-        if _len_txt <= 2:
+        if _txt in override_texts.keys():
+            return override_texts[_txt], 1
 
-            _first_try_class, _first_try_prob = self.predict_tf(_txt)
-
-            if _first_try_prob > LangDetector._threshold:
-                return _first_try_class, _first_try_prob
-            else:
-                _first_try = self.predict_fast_text(_txt)
-                _first_try_class, _first_try_prob = _first_try[0][0], _first_try[1][0]
-                return _first_try_class, _first_try_prob
-
-        return self.predict_tf(_txt)[0], self.predict_tf(_txt)[1]
+        _first_try_class, _first_try_prob = self.predict_tf(_txt)
+        print("test language", _first_try_class, _first_try_prob)
+        if _first_try_prob > LangDetector._threshold:
+            return _first_try_class, _first_try_prob
+        else:
+            _first_try = self.predict_fast_text(_txt)
+            print("predicted.....")
+            _first_try_class, _first_try_prob = _first_try[0][0], _first_try[1][0]
+            return _first_try_class, _first_try_prob
 
