@@ -16,7 +16,7 @@ servers = {
     "tn": "http://localhost:5007",
 }
 
-detector = Factory.getLangDetector()
+# detector = Factory.getLangDetector()
 mongo_client = Factory.getMongoClient()
 
 
