@@ -169,16 +169,22 @@ def redirect():
     _conversation_id = str(request.json["sender"])
     _message = request.json["message"]
     _mode = request.json["mode"]
-    _default_lang = request.json["langue"]
+    # _default_lang = request.json["langue"]
+    # _lang = _default_lang
 
-    _lang = _default_lang
+    # fixed to english language
 
+    _default_lang = "en"
+    _lang = "en"
+
+    """
     try:
         _persistance = request.json["persistance"]
     except:
         _persistance = True
-
-    _lang, _prob = predict_language(detector, _message)
+    """
+    _persistance = False
+    # _lang, _prob = predict_language(detector, _message)
 
     init_context(_conversation_id, _mode, _lang, _default_lang, _persistance)
     # update_context(_conversation_id, _mode, _lang, _default_lang)
@@ -189,7 +195,7 @@ def redirect():
     _resp = send_message(_conversation_id, _message, mongo_client, _persistance)
     if len(_resp) > 0:
         _resp[0]["langue"] = _lang
-        _resp[0]["prob_lang"] = float(_prob)
+        # _resp[0]["prob_lang"] = float(_prob)
 
     _resp = jsonify(_resp)
 
