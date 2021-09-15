@@ -1,5 +1,5 @@
 #custom zied
-/models/model_lang/**
+#/models/model_lang/**
 
 # Byte-compiled / optimized / DLL files
 __pycache__/
